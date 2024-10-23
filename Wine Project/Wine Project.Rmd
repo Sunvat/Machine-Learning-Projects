@@ -1,0 +1,121 @@
+---
+title: "WineDataset"
+author: "Sunvat Singh Brar"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# set global chunk options: images will be 7x5 inches
+knitr::opts_chunk$set(fig.width=7, fig.height=5)
+```
+
+## Conceptual:
+**Q1**:(2 pts) Generally speaking, would you expect a flexibly or inflexible method to perform better when the relationship between the predictors and response is close to linear. Justify your answer. 
+<br>
+**A1**: I would expect the inflexible method to perform better when the relationship between the predictors and response is close to linear because the inflexible method would have a low mean squared error for testing the data set as compared to a flexible method which would be an over fit to the dataset due to its high variance.
+<br>
+<br>
+**Q2:**If your model obtains a very low training MSE but relatively high testing MSE, would you recommend to move to a more flexible or a less flexible model. Justify your answer. 
+<br>
+**A2:**Since we have a low Mean Squared Error our model is already highly flexible which also means that it has low bias and high variance hence an overfit for the training dataset so to be a better fit for the testing MSE I would recommend moving to a less flexible model.
+<br>
+<br>
+**Q3:**Explain whether each scenario is a classification or regression problem, and indicate whether we are most interested in inference or prediction. Finally, provide n and p. 
+
+**Q3(a):**We collect a set of data on the top 500 applicants to UBC. For each applicant we record age, high school grades (grade 9/10/11/12 GPA), current country of residence and whether or not they received an offer of admission. We are interested in understanding which factors affect an applicants chances of admission to UBC.
+<br>
+**A3(a):**Since we need to check a person's chances of admission to UBC it would be a classification problem and n = 500 and p = 4 (age,high school grades,country of residence,admission offer)
+<br>
+<br>
+**Q3(b):**We are interested in determining if a DATA 311 student is likely to pass the final exam given their course work during the semester. Hence we collect the grades for all of the six assignments, and two midterms.
+<br>
+**A3(b):**Since we are determining if the students would pass or fail the final exam this would be a classification and we would also be interested in prediction. So n = 100, p =8 which consists of 6 assignments and 2 midterms.
+<br>
+<br>
+**Q3(c):**We are interested exploring the factors that determines the resting heart rate of middle-aged individuals. We randomly sample 500 Fitbit users and record their weekly fitness report over last year (52 weeks). Each weekly report contains: total steps, total floors climbed, total distance (km), average daily calorie burn, total “active zone” minutes, total number of exercising days, average restful sleep, average hours with 250+ steps, average resting heart rate, and weight.
+<br>
+**A3(c):**This would be a regression scenario as we are getting a quantitative value. Here n =500, p=10 and we are interested in the relation between the total steps, total floors climbed, total distance (km), average daily calorie burn, total “active zone” minutes, total number of exercising days, average restful sleep, average hours with 250+ steps, average resting heart rate, and weight and the resting heart rate of middle aged individuals hence we would be interested in inference.
+<br>
+<br>
+**Q3(d):**Provide a sketch of typical (squared) bias, variance, training error, test error, and irreducible error curves, on a single plot with the x-axis should represent the amount of flexibility in the method. Make sure to label each one. There should be five curves. Tip be sure to save your image as a .png file and embed it into your Rmd file.
+<br>
+**A3(d):** ![Graph for Q3(d)](C:/users/sunva/Desktop/Q3Data311.png)
+<br>
+
+## Application:
+
+
+
+```{r , echo=TRUE,fig.height=15,fig.width=15}
+library("gclus")
+data(wine)
+df <- wine
+complete.cases(df) #4a
+str(df) #4b yes all variables are quantitative
+#4c
+color <- df[,1]#colour corr. to class column
+pairs(df, col = color)
+#4d
+st_num = 26023085 # REPLACE WITH YOUR STUDENT NUMBER                      # -----------
+set.seed(st_num)                                                        # 
+N = nrow(df)#nrow counts the number of rows total number of observations                                      # set-up
+n =0.6*N # number of observations in training                                # 2 pts 
+m = 0.4*N# number of observations in testing                                 # 
+tr_ind <- sample(N, n) # row index of training observations             #
+te_ind <- setdiff(seq_len(N), tr_ind) # row index of test obs           # -------------
+
+# Training Set                                                          # -------------  
+tr_set <- df[tr_ind,]# use the index to subset the possum data here                 # training set 
+tr_x = tr_set[,2:14] # stores the X inputs for the training set         # 1 pt
+tr_y = tr_set[,1] # stores the Y outpur for the training set         # -------------
+
+# Testing Set                                                           # -----------
+te_set <- df[te_ind,] # use the index to subset the possum data here           # test set 
+te_x = te_set[,2:14] # stores the X inputs for the test set             # 1 pt
+te_y = te_set[,1] # stores the Y ouput for the test set              # -----------
+#4e
+library("class")
+#Mean Squared error for testing set
+err_test = numeric()
+for(j in 1:12){
+  tr = knn(tr_x,te_x,tr_y,k=j)
+  err_test[j]= mean(te_y!=tr)
+}
+#Mean Squared error for training set
+err_train = numeric()
+for(j in 1:12){
+  te = knn(tr_x,tr_x,tr_y,k=j)
+  err_train[j] = mean(tr_y!=te)
+}
+err_test
+err_train
+```
+```{r echo=TRUE,fig.height=7,fig.width=10}
+#ploting 
+#plot type = b means for both points and line
+plot(1:12,err_test,lty="dashed",type = "b",ylim = c(0,0.5),xlab = "K-Values",ylab = "Error", col="blue")
+lines(1:12,err_train,type = "b",col="red")
+legend("bottomright",legend = c("Training Error","Testing Error"),col = c("red","blue"),lty = 1:2)
+```
+**Q4 h):**Based on these results, which value of k would you say is “best” and why?
+<br>
+**A4 h):** According to the graph I would say that K-value of 6 is the best as the error is the least at that point and we would idealy like to have a model having the lowest testing error.
+<br>
+<br>
+**Q4 i):**Below is one possible result for running this experiment. Provide an explanation as to why the testing error might be lower than the training error for k=12.
+<br>
+**A4 i):**This testing error could be beacuse of the fact that we ran the simulation once and got a randomly generated error in the first try where testing error is smaller than training error.
+<br>
+<br>
+**Q4 j):**You may also notice that the testing error does not have the typically U-shape that we discussed in class. Provide some explanation as to why that might be.
+<br>
+**A4 j):**Yes the testing error does not have a U-shape this is due to the data set being very small and also as we are running the simulation once it is not enough for us to get a u shaped curve.
+<br>
+<br>
+**Q4 k):**Both the testing and training curves are quite jumpy. What could we have differently to obtain smoother curves?
+<br>
+**A4 k):**As the curves are quite jumpy we can conclude that the data set is small and the simulation is run only once hence we can have smooth curves by having a large dataset with more data points and run more simulations.
+<br>
+<br>
